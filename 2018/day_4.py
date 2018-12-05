@@ -1,29 +1,55 @@
-from utils import time_it, read_data
+from utils import timeIt, readData
 import re
 from datetime import datetime
+from collections import defaultdict
 
-parser = re.compile(r'\[(?P<timestamp>.*)\]\s{1}(?P<action>.*)')
-timeFormat = 'Y-m-d H:M'
+parser = re.compile(r'\[(?P<timestamp>.*)\]\s{1}(?P<event>.*)')
+timeFormat = '%Y-%m-%d %H:%M'
 
 
 def parseText(text):
-    timestamp, action = parser.search(text).groups()
-    timestamp = datetime.strptime(timeFormat, timestamp)
-    return timestamp, action
+    timestamp, event = parser.search(text).groups()
+    timestamp = datetime.strptime(timestamp, timeFormat)
+    return timestamp, event
 
-def getGuardId(action):
-    return re.search(r'Guard \#(\d+) begins', action).group(1)
+def getGuardId(event):
+    return int(re.search(r'Guard \#(\d+) begins', event).group(1))
 
-@time_it
+def getSleepEvents():
+	currentGuard = None
+	sleepStart = None
+	for ts, event in sorted(map(parseText, readData('2018/data/day_4'))):
+		if event == 'wakes up':
+			yield currentGuard, sleepStart, ts
+			sleepStart = None
+		elif event == 'falls asleep':
+			assert sleepStart == None
+			sleepStart = ts
+		else:
+			currentGuard = getGuardId(event)
+
+def getSleepSchedule():
+	sleepSchedule = defaultdict(lambda: [0]*60)
+	for guard, sleepStart, sleepEnd in getSleepEvents():
+		sleep = sleepSchedule[guard]
+		for minute in range(sleepStart.minute, sleepEnd.minute):
+			sleep[minute] += 1
+	return sleepSchedule
+
+@timeIt
 def part1():
-    for row in read_data('2018/data/day_4'):
-        print(parseText(row))
+	sleepSchedule = getSleepSchedule()
+	mostSleepyGuard, timesAsleep = max(sleepSchedule.items(), key=lambda sleep: sum(sleep[1]))
+	sleepyMinute = timesAsleep.index(max(timesAsleep))
+	return mostSleepyGuard * sleepyMinute
 
-
-@time_it
+@timeIt
 def part2():
-    pass
-            
+	sleepSchedule = getSleepSchedule()
+	mostSleepyGuard, timesAsleep = max(sleepSchedule.items(), key=lambda sleep: max(sleep[1]))
+	sleepyMinute = timesAsleep.index(max(timesAsleep))
+	return mostSleepyGuard * sleepyMinute
+
 
 if __name__ == '__main__':
     print('Part 1:', part1())

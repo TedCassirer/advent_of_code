@@ -1,9 +1,9 @@
 from collections import Counter
-from utils import time_it, read_data
+from utils import timeIt, readData
 
-@time_it
+@timeIt
 def part1():
-    letterCounts = map(dict.values, map(Counter, read_data('2018/data/day_2')))
+    letterCounts = map(dict.values, map(Counter, readData('2018/data/day_2')))
 
     threeLetters = 0
     twoLetters = 0
@@ -14,12 +14,12 @@ def part1():
 
     return threeLetters * twoLetters
 
-@time_it
+@timeIt
 def part2():
     def maskLetter(word, i):
         return word[:i] + word[i+1:]
 
-    words = list(read_data('2018/data/day_2'))
+    words = list(readData('2018/data/day_2'))
     N = len(words[0])
     for i in range(N):
         seen = set()

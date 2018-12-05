@@ -1,8 +1,8 @@
-def read_data(path):
+def readData(path):
     with open(path) as data:
         yield from data
 
-def time_it(func):
+def timeIt(func):
     def timed(*args, **kwargs):
         from time import time
         st = time()

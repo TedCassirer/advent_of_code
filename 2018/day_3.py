@@ -1,5 +1,5 @@
 from itertools import chain, product
-from utils import read_data, time_it
+from utils import readData, timeIt
 from itertools import chain, product
 
 
@@ -30,7 +30,7 @@ class Rectangle:
 
 
 def getRectangles():
-    for line in read_data('2018/data/day_3'):
+    for line in readData('2018/data/day_3'):
         id, _, corner, size = line.split()
         x1, y1 = map(int, corner[:-1].split(','))
         xd, yd = map(int, size.split('x'))
@@ -53,7 +53,7 @@ def getOverlaps(rectangles):
         yield r1.getOverlap(r2)
 
 
-@time_it
+@timeIt
 def part1():
     rectangles = getRectangles()
     overlaps = getOverlaps(rectangles)
@@ -61,7 +61,7 @@ def part1():
     return len(tiles)
 
 
-@time_it
+@timeIt
 def part2():
     rectangles = set(getRectangles())
     overlapping = set(

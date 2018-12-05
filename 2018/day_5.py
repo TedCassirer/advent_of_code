@@ -1,34 +1,25 @@
-from itertools import chain, product
+from itertools import filterfalse
 from utils import readData, timeIt
 
-def doesReact(c1, c2):
-    return c1.swapcase() == c2
-
 def reactPolymer(polymer):
-    i = 0
-    while i < len(polymer)-1:
-        c1, c2 = polymer[i], polymer[i+1]
-        if doesReact(c1, c2):
-            polymer = polymer[:i] + polymer[i+2:]
-            i -= 1 if i > 0 else 0
+    result = []
+    for s in polymer:
+        if result and s.swapcase() == result[-1]:
+            result.pop()
         else:
-            i += 1    
-    return polymer
-
-def getPolymerPairs(polymer):
-    chars = set(p for p in polymer if p.islower())
-    yield from ((p, p.upper()) for p in chars)
+            result.append(s)
+    return result
 
 @timeIt
 def part1():
-    polymer = str(next(readData('2018/data/day_5')))
+    polymer = next(readData('2018/data/day_5'))
     return len(reactPolymer(polymer))        
 
 @timeIt
 def part2():
-    polymer = str(next(readData('2018/data/day_5')))
-    polymerPairs = getPolymerPairs(polymer)
-    reducedForms = map(lambda p: polymer.replace(p[0], '').replace(p[1], ''), polymerPairs)
+    polymer = next(readData('2018/data/day_5'))
+    polymerPairs = {(p, p.upper()) for p in polymer if p.islower()}
+    reducedForms = map(lambda pp: filterfalse(pp.__contains__, polymer), polymerPairs)
     reactedPolymers = map(reactPolymer, reducedForms)
     return min(map(len, reactedPolymers))
 

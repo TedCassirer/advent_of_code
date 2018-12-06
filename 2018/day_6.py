@@ -1,5 +1,5 @@
 from utils import readData, timeIt
-
+from functools import reduce
 
 class NodeGroup:
     nextNeighbors = dict()
@@ -80,11 +80,44 @@ def part1():
     
 
 
+def getDistance(coord, nodes):
+    distance = 0
+    for n in nodes:
+        distance += abs(coord[0]-n[0]) + abs(coord[1]-n[1])
+    return distance
+
+def getConnections(coord):
+    x, y = coord
+    yield (x-1, y)
+    yield (x+1, y)
+    yield (x, y-1)
+    yield (x, y+1)
+
+def bfs(start, nodes, maxRadius):
+    seen = set()
+    stack = [start]
+    while stack:
+        node = stack.pop()
+        if node in seen or getDistance(node, nodes) >= maxRadius:
+            continue
+        seen.add(node)
+        stack.extend(getConnections(node))
+    return seen
 
 @timeIt
 def part2():
-    pass
+    RADIUS = 10000
+    data = readData('2018/data/day_6')
+    nodes = []
+    for id, row in enumerate(data):
+        x, y = map(int, row.split(', '))
+        nodes.append((x, y))
+    N = len(nodes)
+    ax, ay = reduce(lambda a, b: (a[0]+b[0], a[1]+b[1]), nodes)
+    ax //= N
+    ay //= N
+    return len(bfs((ax, ay), nodes, RADIUS))
 
 if __name__ == '__main__':
-    print('Part 1:', part1())
+    #print('Part 1:', part1())
     print('Part 2:', part2())

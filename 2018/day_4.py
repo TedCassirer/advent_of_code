@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 from collections import defaultdict
 
-parser = re.compile(r'\[(?P<timestamp>.*)\]\s{1}(?P<event>.*)')
+parser = re.compile(r'\[(?P<timestamp>.*)\] (?P<event>.*)')
 timeFormat = '%Y-%m-%d %H:%M'
 
 

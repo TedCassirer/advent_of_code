@@ -64,8 +64,7 @@ def part1():
 @timeIt
 def part2():
     rectangles = set(getRectangles())
-    overlapping = set(
-        s for rects in getOverlappingRectangles(rectangles) for s in rects)
+    overlapping = set(s for rects in getOverlappingRectangles(rectangles) for s in rects)
     return rectangles - overlapping
 
 

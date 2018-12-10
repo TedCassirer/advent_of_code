@@ -1,23 +1,26 @@
 from utils import readData, timeIt
-from collections import defaultdict, deque
+from collections import defaultdict
+import heapq
+
 class Node:
     def __init__(self, id):
         self.id = id
         self.before = set()
         self.after = set()
+        self.time = self.getTime()
 
     def remove(self):
         for n in self.after:
             n.before.remove(self)
 
     def getTime(self):
-        return ord(self.id) - ord('A')+1
+        return ord(self.id) - ord('A')+60
 
     def __lt__(self, other):
-        return self.id < other.id
+        return self.time < other.time
 
     def __repr__(self):
-        return self.id
+        return str((self.id, self.time))
 
 def getOrders():
     nodes = dict()
@@ -32,21 +35,6 @@ def getOrders():
         before.after.add(after)
         after.before.add(before)
     return set(nodes.values())
-
-def doWork(nodes, workers=2):
-    currentTime = 0
-    nodes = sorted(nodes, key=Node.getTime, reverse=True)
-    processing = deque(map(Node.getTime, nodes[-workers:]))
-    while processing:
-        deltaTime = processing.pop()
-        for i in range(len(processing)):
-            processing[i] -= deltaTime
-            assert processing[i] >= 0
-        if nodes:
-            processing.appendleft(nodes.pop().getTime())
-        currentTime += deltaTime
-        
-    return currentTime
 
 @timeIt
 def part1():
@@ -65,16 +53,27 @@ def part1():
 
 @timeIt
 def part2():
-    totalTime = 0
     nodes = getOrders()
+    workers = 5
+    work = []
+    currentTime = 0
+    ready = []
     while nodes:
-        ready = list(filter(lambda n: len(n.before) == 0, nodes))
-        totalTime += doWork(ready)
-        for completedWork in ready:
-            for work in completedWork.after:
-                work.before.remove(completedWork)
-            nodes.remove(completedWork)
-    return totalTime
+        for n in list(nodes):
+            if len(n.before) == 0:
+                ready.append(n)
+                nodes.remove(n)
+        while ready and workers:
+            task = ready.pop()
+            task.time += currentTime
+            heapq.heappush(work, task)
+            workers -= 1
+        completedWork = heapq.heappop(work)
+        currentTime = completedWork.time
+        workers += 1 
+        for aw in completedWork.after:
+            aw.before.discard(completedWork)
+    return currentTime
 
 if __name__ == '__main__':
     print('Part 1:', part1())

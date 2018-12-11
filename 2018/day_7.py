@@ -14,7 +14,7 @@ class Node:
             n.before.remove(self)
 
     def getTime(self):
-        return ord(self.id) - ord('A')+60
+        return ord(self.id) - ord('A')+61
 
     def __lt__(self, other):
         return self.time < other.time
@@ -72,7 +72,7 @@ def part2():
         currentTime = completedWork.time
         workers += 1 
         for aw in completedWork.after:
-            aw.before.discard(completedWork)
+            aw.before.remove(completedWork)
     return currentTime
 
 if __name__ == '__main__':

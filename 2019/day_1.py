@@ -1,15 +1,15 @@
-def getData(loop=False):
-    with open('2019/data/day_1') as data:
-        yield from data
+def getInput(loop=False):
+    with open('2019/input/day_1') as input:
+        yield from input
 
 def fuelbois(n):
     return ((n//3)-2)
 
 def part1():
-    return sum((fuelbois(n)) for n in map(int, getData()))
+    return sum((fuelbois(n)) for n in map(int, getInput()))
 
 def part2():
-    numbers = map(int, getData())
+    numbers = map(int, getInput())
     return sum(map(doTheThing, numbers))
 
 def doTheThing(n):

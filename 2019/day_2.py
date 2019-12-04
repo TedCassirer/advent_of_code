@@ -1,4 +1,4 @@
-def getInput(loop=False):
+def get_input():
     with open('2019/input/day_2') as input:
         return list(map(int, next(input).split(',')))
 
@@ -18,14 +18,14 @@ def do_the_thing(numbers):
     raise Exception()
 
 def part1():
-    numbers = getInput()
+    numbers = get_input()
     numbers[1] = 12
     numbers[2] = 2
     return do_the_thing(numbers)[0]
 
 def part2():
     target = 19690720
-    numbers = getInput()
+    numbers = get_input()
     for n1 in range(0, 100):
         for n2 in range(0, 100):
             numbers_copy = numbers[:]

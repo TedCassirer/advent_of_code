@@ -20,7 +20,7 @@ directions = {
     'L': Coordinate(-1, 0),
 }
 
-def getInput(loop=False):
+def get_input():
     with open('2019/input/day_3') as input:
         for line in input:
             yield [(c[0], int(c[1:])) for c in line.split(',')]
@@ -34,13 +34,13 @@ def get_line(movements):
             yield current
 
 def part1():
-    lines = [set(get_line(movements)) for movements in getInput()]
+    lines = [set(get_line(movements)) for movements in get_input()]
     crossings = set.intersection(*lines)
     distance_from_start = map(lambda c: abs(c.x) + abs(c.y), crossings)
     return min(distance_from_start)
 
 def part2():
-    lines = [{coord : step+1 for step, coord in enumerate(get_line(movements))} for movements in getInput()]
+    lines = [{coord : step+1 for step, coord in enumerate(get_line(movements))} for movements in get_input()]
     crossings = set.intersection(*(set(l.keys()) for l in lines))
     steps_to_crossing = (sum(l[c] for l in lines) for c in crossings)
     return min(steps_to_crossing)

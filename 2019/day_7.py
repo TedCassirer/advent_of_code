@@ -1,4 +1,4 @@
-from day_5 import *
+from IntCodeComputer import IntCodeComputerVM, generator_of
 from itertools import permutations
 
 def read_file(path):

@@ -1,6 +1,3 @@
-from day_5 import *
-from itertools import permutations
-
 BLACK = 0
 WHITE = 1
 TRANSPARENT = 2

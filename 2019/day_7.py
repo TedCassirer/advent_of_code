@@ -10,11 +10,12 @@ def part1():
     phase_setting_sequences = permutations((0,1,2,3,4))
     highest_output = 0
     for phase_settings in phase_setting_sequences:
+        vms = []
         vms = [IntCodeComputerVM(program, phase) for phase in phase_settings]
-        vms[0].connect_with(generator_of(0))
+        vms[0].input_provided_from(generator_of(0))
         for i in range(1, len(vms)):
-            vms[i].connect_with(vms[i-1])
-        highest_output = max(highest_output, vms[-1].run())
+            vms[i].input_provided_from(vms[i-1].run())
+        highest_output = max(highest_output, next(vms[-1].run()))
     return highest_output
 
 def part2():
@@ -25,9 +26,9 @@ def part2():
         prev_vm = None
         vms = [IntCodeComputerVM(program, phase) for phase in phase_settings]
         for i in range(len(vms)):
-            vms[i].connect_with(vms[i-1])
+            vms[i].input_provided_from(vms[i-1].run())
         
-        vms[0].run()
+        next(vms[0].run())
         highest_output = max(highest_output, (vms[-1].out, phase_settings))
     return highest_output[0]
 

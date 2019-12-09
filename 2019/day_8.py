@@ -18,8 +18,8 @@ def count_number_of(num, layer):
 
 def to_printable_image(image):
     symbols = {
-        BLACK: ' ',
-        WHITE: '#',
+        BLACK: '░',
+        WHITE: '▓',
         TRANSPARENT: 'I\'m invisible'
     }
     decoded_image = []

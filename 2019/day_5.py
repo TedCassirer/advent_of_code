@@ -1,3 +1,5 @@
+from itertools import chain
+
 POSITION = 0
 IMMEDIATE = 1
 
@@ -27,12 +29,22 @@ ACTIONS = {
 }
 
 
+def manual_input():
+    while True:
+        yield int(input("Input: "))
+
+def generator_of(*args):
+    for a in args:
+        yield a
+
 class IntCodeComputerVM:
-    def __init__(self, program):
-        self.__mem = program
+    def __init__(self, program, phase_setting):
+        self.__mem = program[:]
         self.__ptr = 0
-        self.__out = 0
-        self.__input = self.__get_input()
+        self.out = None
+        self.phase_setting = phase_setting
+        self.__input = generator_of(phase_setting)
+        self.halted = False
 
         self.__OP = {
             ADD: self.__ADD,
@@ -45,6 +57,18 @@ class IntCodeComputerVM:
             EQUALS: self.__EQUALS,
             HALT: self.__HALT
         }
+    
+    def __repr__(self):
+        return str(self.phase_setting)
+
+    def connect_with(self, int_supplier):
+        if type(int_supplier) == IntCodeComputerVM:
+            def get_output():
+                while not int_supplier.halted:
+                    yield int_supplier.run()
+            self.__input = chain(self.__input, get_output())
+        else:
+            self.__input = chain(self.__input, int_supplier)
 
     # Increments pointer
     def __read_instruction(self):
@@ -74,10 +98,6 @@ class IntCodeComputerVM:
             args[i] = self.__read_val(mode, action)
         return args
 
-    def __get_input(self):
-        while True:
-            yield int(input("Input: "))
-
     def __ADD(self, p1, p2, p3):
         self.__mem[p3] = p1 + p2
 
@@ -88,8 +108,8 @@ class IntCodeComputerVM:
         self.__mem[p1] = next(self.__input)
 
     def __OUT(self, p1, p2, p3):
-        self.__out = p1
-        return self.__out
+        self.out = p1
+        return self.out
 
     def __JUMP_IF_TRUE(self, p1, p2, p3):
         if p1 != 0:
@@ -106,16 +126,18 @@ class IntCodeComputerVM:
         self.__mem[p3] = 1 if p1 == p2 else 0
 
     def __HALT(self, p1, p2, p3):
-        return 1
+        return self.out
 
-    def run(self, *input_params):
-        if input_params:
-            self.__input = (n for n in input_params)
-        while True:
+    def run(self):
+        while not self.halted:
             modes, op = self.__read_instruction()
             args = self.__get_args(modes, op)
-            if self.__OP[op](*args):
-                return self.__out
+            self.__OP[op](*args)
+            if op == HALT:
+                self.halted = True
+                return self.out
+            if op == OUT:
+                return self.out
 
 
 def read_file(path):
@@ -125,14 +147,18 @@ def read_file(path):
 
 def part1():
     program = read_file('2019/input/day_5')
-    vm = IntCodeComputerVM(program)
-    return vm.run(1)
+    vm = IntCodeComputerVM(program, 1)
+    while not vm.halted:
+        vm.run()
+    return vm.out
 
 
 def part2():
     program = read_file('2019/input/day_5')
-    vm = IntCodeComputerVM(program)
-    return vm.run(5)
+    vm = IntCodeComputerVM(program, 5)
+    while not vm.halted:
+        vm.run()
+    return vm.out
 
 
 if __name__ == '__main__':

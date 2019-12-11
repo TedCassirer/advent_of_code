@@ -43,12 +43,12 @@ def generator_of(*args):
 
 
 class IntCodeComputerVM:
-    def __init__(self, program, phase_setting=None):
+    def __init__(self, program, phase_setting=[]):
         self.__mem = program[:]
         self.__ptr = 0
         self.out = None
         self.phase_setting = phase_setting
-        self.__input = manual_input() if phase_setting == None else generator_of(phase_setting)
+        self.__input = generator_of(phase_setting)
         self.halted = False
         self.__relative_base = 0
 
@@ -159,6 +159,5 @@ class IntCodeComputerVM:
             self.__OP[op](*args)
             if op == HALT:
                 self.halted = True
-                yield self.out
-            if op == OUT:
+            elif op == OUT:
                 yield self.out

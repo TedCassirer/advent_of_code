@@ -28,7 +28,7 @@ def read_program():
     with open('2019/input/day_11') as input:
         return [int(n) for n in input.readline().split(',')]
 
-def print_grid(grid):
+def encode_image(grid):
     NOT_PAINTED = 2
     x_min = min(x for y, x in grid.keys())
     y_min = min(y for y, x in grid.keys())
@@ -50,27 +50,31 @@ def print_grid(grid):
         return '\n' + '\n'.join(decoded_image)
     canvas
     return to_printable_image(canvas)
-def part1():
+
+def run_mr_roboto(robo_brain, print_on_move=False):
     grid = defaultdict(lambda: BLACK)
     robo = RoboWife()
-    robo_brain = IntCodeComputerVM(read_program())
     def robo_input(robo, grid):
         while True:
-            if robo.pos in grid:
-                print('Yeet')
             yield grid[robo.pos]
     robo_brain.input_provided_from(robo_input(robo, grid))
     runner = robo_brain.run()
     for painted_color in runner:
-        turn = next(runner)
         grid[robo.pos] = painted_color
+        turn = next(runner)
         robo.move(turn)
-        print(print_grid(grid))
-    print(len(grid))
-    return print_grid(grid)
+        if print_on_move:
+            print(encode_image(grid))
+    return grid
+
+def part1():
+    robo_brain = IntCodeComputerVM(read_program(), 0)
+    return len(run_mr_roboto(robo_brain))
+
 
 def part2():
-    pass
+    robo_brain = IntCodeComputerVM(read_program(), 1)
+    return encode_image(run_mr_roboto(robo_brain))
 
 if __name__ == '__main__':
     print('Part 1:', part1())

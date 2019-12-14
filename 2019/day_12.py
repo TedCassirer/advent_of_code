@@ -93,7 +93,7 @@ def part2():
     y_tick, y_period = y_period_data
     z_tick, z_period = z_period_data
 
-    search_to = 100
+    search_to = 10**12
     while True:
         print(search_to)
         x_ticks = {x for x in range(x_tick, search_to, x_period)}
@@ -110,7 +110,7 @@ def part2():
         if intersection:
             return min(intersection)
 
-        search_to += search_to
+        search_to += 10**12
 
 
 if __name__ == '__main__':

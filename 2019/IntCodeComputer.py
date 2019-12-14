@@ -41,9 +41,12 @@ def generator_of(*args):
     for a in args:
         yield a
 
+def empty():
+    return
+    yield 
 
 class IntCodeComputerVM:
-    def __init__(self, program, phase_setting=[]):
+    def __init__(self, program, phase_setting=empty()):
         self.__mem = program[:]
         self.__ptr = 0
         self.out = None

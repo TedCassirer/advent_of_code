@@ -1,16 +1,15 @@
 def get_input():
     with open('2019/input/day_1') as input:
-        yield from input
+        yield from (int(i) for i in input)
 
 def fuelbois(n):
     return ((n//3)-2)
 
 def part1():
-    return sum((fuelbois(n)) for n in map(int, get_input()))
+    return sum(map(fuelbois, get_input()))
 
 def part2():
-    numbers = map(int, get_input())
-    return sum(map(doTheThing, numbers))
+    return sum(map(doTheThing, get_input()))
 
 def doTheThing(n):
     s = fuelbois(n)

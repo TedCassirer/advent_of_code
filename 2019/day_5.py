@@ -8,15 +8,13 @@ def read_file(path):
 def part1():
     program = read_file('2019/input/day_5')
     vm = IntCodeComputerVM(program, 1)
-    list(vm.run())
-    return vm.out
+    return list(vm.run())[-1]
 
 
 def part2():
     program = read_file('2019/input/day_5')
     vm = IntCodeComputerVM(program, 5)
-    list(vm.run())
-    return vm.out
+    return list(vm.run())[-1]
 
 
 if __name__ == '__main__':

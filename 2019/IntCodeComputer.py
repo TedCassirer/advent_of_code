@@ -46,12 +46,12 @@ def empty():
     yield 
 
 class IntCodeComputerVM:
-    def __init__(self, program, phase_setting=empty()):
+    def __init__(self, program, phase_setting=None):
         self.__mem = program[:]
         self.__ptr = 0
         self.out = None
         self.phase_setting = phase_setting
-        self.__input = generator_of(phase_setting)
+        self.__input = generator_of(phase_setting) if phase_setting else empty()
         self.halted = False
         self.__relative_base = 0
 

@@ -1,6 +1,7 @@
 from IntCodeComputer import IntCodeComputerVM, manual_input
 from queue import deque
 from time import sleep
+
 class Directions:
     NORTH = 1
     SOUTH = 2
@@ -59,11 +60,12 @@ class RoboBoy:
         self.robo.input_provided_from(self.choose_direction())
         self.pos = (0, 0)
         self.grid = {self.pos: Tile(self.pos, TileType.EMPTY)}
+        self.oxygen_pos = None
         self.last_dir = None
 
     
-    def print_grid(self):
-        sleep(0.02)
+    def print_grid(self, delay=0.005):
+        sleep(delay)
         min_x = min(x for y, x in self.grid.keys())
         min_y = min(y for y, x in self.grid.keys())
         max_x = max(x for y, x in self.grid.keys())
@@ -91,21 +93,42 @@ class RoboBoy:
         print('\n'.join(rows))
 
     
-    def get_path_to_closest_unknown_direction(self):
-        queue = deque(((self.grid[self.pos], []),))
+    def bff_search_for_tile(self, start, tile_matcher):
+        queue = deque(((self.grid[start], []),))
+        visited = set()
         while queue:
             tile, path = queue.popleft()
+            visited.add(tile)
+            if tile_matcher(tile):
+                return path
             if tile.type == TileType.WALL:
                 continue
             for dir, tile_connection in tile.connections.items():
-                if tile_connection:
-                    queue.append((tile_connection, path + [dir]))
-                else:
-                    return path + [dir]
+                if tile_connection in visited:
+                    continue
+                queue.append((tile_connection, path + [dir]))
+        print(len(path))
+    
+    def spread_oxygen(self, tiles, minutes=0):
+        if not tiles:
+            return minutes - 1
+        next_tiles = set()
+        for tile in tiles:
+            for dir, tile_connection in tile.connections.items():
+                if tile_connection.type == TileType.WALL or tile_connection.type == TileType.OXYGEN_TANK:
+                    continue
+                tile_connection.type = TileType.OXYGEN_TANK
+                next_tiles.add(tile_connection)
+        self.print_grid(0.05)
+        return self.spread_oxygen(next_tiles, minutes+1)
+        
 
     def choose_direction(self):
         while True:
-            for d in self.get_path_to_closest_unknown_direction():
+            path = self.bff_search_for_tile(self.pos, lambda tile: tile == None)
+            if not path:
+                return
+            for d in path:
                 self.last_dir = d
                 yield d
 
@@ -128,7 +151,7 @@ class RoboBoy:
                 current_tile.connections[self.last_dir] = next_tile
                 next_tile.connections[Directions.OPPOSITE[self.last_dir]] = current_tile
             elif status_code == StatusCode.OXYGEN_TANK:
-                print(self.pos)
+                self.oxygen_pos = position_moved_to
                 self.pos = position_moved_to
                 next_tile = self.grid.get(position_moved_to)
                 if not next_tile:
@@ -138,7 +161,7 @@ class RoboBoy:
                 next_tile.connections[Directions.OPPOSITE[self.last_dir]] = current_tile
             self.print_grid()
 
-
+    
 def read_file():
     with open('2019/input/day_15') as input:
         return [int(n) for n in input.readline().split(',')]
@@ -146,11 +169,17 @@ def read_file():
 def part1():
     robo = IntCodeComputerVM(read_file())
     boy = RoboBoy(robo)
-    return boy.gogo_robo_boy()
+    boy.gogo_robo_boy()
+    return len(boy.bff_search_for_tile((0, 0), lambda tile: tile.type == TileType.OXYGEN_TANK))
 
 def part2():
-    pass
+    robo = IntCodeComputerVM(read_file())
+    boy = RoboBoy(robo)
+    boy.gogo_robo_boy()
+
+
+    return boy.spread_oxygen({boy.grid[boy.oxygen_pos]})
 
 if __name__ == '__main__':
-    print('Part 1:', part1())
+    #print('Part 1:', part1())
     print('Part 2:', part2())

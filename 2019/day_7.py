@@ -28,10 +28,10 @@ def part2():
         for i in range(len(vms)):
             vms[i].input_provided_from(vms[i-1].run())
         
-        next(vms[0].run())
+        list(vms[-1].run())
         highest_output = max(highest_output, (vms[-1].out, phase_settings))
     return highest_output[0]
 
 if __name__ == '__main__':
-    print('Part 1:', part1())
+    #print('Part 1:', part1())
     print('Part 2:', part2())

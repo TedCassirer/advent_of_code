@@ -40,6 +40,15 @@ def part1():
 
 
 def part2():
+    '''
+    Manual solution
+    
+    Movements: R,8,L,10,R,8,R,12,R,8,L,8,L,12,R,8,L,10,R,8,L,12,L,10,L,8,R,8,L,10,R,8,R,12,R,8,L,8,L,12,L,12,L,10,L,8,L,12,L,10,L,8,R,8,L,10,R,8,R,12,R,8,L,8,L,12
+    Main: A,B,A,C,A,B,C,C,A,B
+    A: R,8,L,10,R,8
+    B: R,12,R,8,L,8,L,12
+    C: L,12,L,10,L,8
+    '''
     program = read_program('2019/input/day_17')
     program[0] = 2
     vm = IntCodeComputerVM(program)
@@ -54,8 +63,8 @@ def part2():
             row = []
         else:
             row.append(char)
-
+    return vm.out
 
 if __name__ == '__main__':
-    #print('Part 1:', part1())
+    print('Part 1:', part1())
     print('Part 2:', part2())

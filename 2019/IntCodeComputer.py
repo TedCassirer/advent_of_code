@@ -31,6 +31,10 @@ ACTIONS = {
     HALT: (),
 }
 
+def read_program(path):
+    with open(path) as input:
+        return [int(n) for n in input.readline().split(',')]
+        
 
 def manual_input():
     while True:

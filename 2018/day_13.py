@@ -89,6 +89,7 @@ def buildGraph():
     trains = []
     trainFind = re.compile((r'v|\<|\^|\>'))
     for row, line in enumerate(data):
+        line = line.rstrip()
         for m in trainFind.finditer(line):
             direction = line[m.span()[0]]
             trains.append(Train((row, m.span()[0]), direction))
@@ -114,6 +115,7 @@ def part2():
     graph, trains = buildGraph()
     taken = {t.pos: t for t in trains}
     while True:
+        trains = sorted(trains, key=lambda t: t.pos)
         for train in trains[:]:
             if not train.pos in taken:
                 continue
@@ -123,10 +125,10 @@ def part2():
                 otherTrain = taken.pop(newPos)
                 trains.remove(train)
                 trains.remove(otherTrain)
-                if len(trains) == 1:
-                    return tuple(reversed(trains[0].pos))
             else:
                 taken[newPos] = train
+        if len(trains) == 1:
+            return tuple(reversed(trains[0].pos))
         
 
 if __name__ == '__main__':

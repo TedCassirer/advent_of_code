@@ -21,61 +21,49 @@ maze = getMaze()
 keyLocations = getKeyLocations(maze)
 
 @lru_cache(None)
-def findPath(key1, key2):
+def getPath(key1, key2):
     visited = set()
     toVisit = deque([(keyLocations[key1], frozenset(), frozenset(), 0)])
-    paths = []
     while toVisit:
         curr, freeKeys, requiredKeys, steps = toVisit.pop()
         tile = maze[curr[0]][curr[1]]
         if curr in visited or tile == '#':
             continue
         if tile == key2:
-            paths.append((steps, freeKeys, requiredKeys))
-            continue
+            return (steps, freeKeys|{key2} , requiredKeys - freeKeys)
         if tile.isalpha():
-            if tile.islower():
-                freeKeys |= {tile}
-            elif not tile.lower() in freeKeys:
+            if tile.isupper():
                 requiredKeys |= {tile.lower()}
+            else:
+                freeKeys |= {tile}
         for nextStep in ((curr[0]+1, curr[1]), (curr[0]-1, curr[1]), (curr[0], curr[1]+1), (curr[0], curr[1]-1)):
             toVisit.append((nextStep, freeKeys, requiredKeys, steps+1))
         visited.add(curr)
-    
-    return paths
 
-def findBestPath():
-    seen = dict()
-    def inner(startKey, keys, stepsTaken, shortest):
-        fingerPrint = (startKey, keys)
-        if fingerPrint in seen and seen[fingerPrint] <= stepsTaken:
-            return shortest
-        else:
-            seen[fingerPrint] = stepsTaken
-
-        if len(keys) == len(keyLocations):
-            assert stepsTaken < shortest
-            return stepsTaken
-
-        toCheck = []
-        for key in keyLocations.keys() - keys:
-            paths = [(s, f, r) for s, f, r in findPath(startKey, key) if keys.issuperset((r | f))]
-            if not paths:
-                continue
-            stepsToKey, freeKeys, requiredKeys = min(paths)
-            toCheck.append((stepsToKey, key, freeKeys | keys | {key}))
-        toCheck.sort()
-
-        for stepsToKey, key, ownedKeys in toCheck:
-            if stepsToKey + stepsTaken < shortest:
-                shortest = min(shortest, inner(key, ownedKeys, stepsTaken+stepsToKey, shortest))
+seen = dict()
+def simpleSearch(current, owned, toFind, currentSteps=0, shortest=1<<32):
+    fp = (current, owned)
+    if fp in seen and seen[fp] <= currentSteps:
         return shortest
+    seen[fp] = currentSteps
 
-    return inner('@', frozenset({'@'}), 0, 1<<32)
+    if currentSteps >= shortest:
+        return shortest
+    if not toFind:
+        print(currentSteps)
+        return currentSteps
+    for path, k2 in sorted((getPath(current, k2), k2) for k2 in toFind):
+        steps, freeKeys, requiredKeys = path 
+        keys = owned|freeKeys
+        if keys.issuperset(requiredKeys):
+            tmp = simpleSearch(k2, keys, toFind-freeKeys, currentSteps+steps, shortest)
+            shortest = min(shortest, tmp)
+    return shortest
 
+    
 @timeIt
 def part1():
-    return findBestPath()
+    return simpleSearch('@', frozenset('@'), frozenset(keyLocations.keys()) - {'@'}, 0)
 
 def part2():
     pass

@@ -1,50 +1,44 @@
 from itertools import cycle
+from functools import lru_cache
+from collections import Counter
 
-PATTERN = [0, 1, 0, -1]
 
-def flatten(nested_list):
-    for inner in nested_list:
-        for n in inner:
-            yield n
+def FFT(signal, start, end, N):
+    cache = {}
+    def inner(phase, level):
+        if level == 0:
+            return signal[(phase%len(signal))-1]
+        
+        key = (phase, level)
+        if key in cache:
+            return cache[key]
+        val = 0
+        for p in range(phase-1, len(signal), 4*phase):
+            for i in range(p, min(len(signal), p+phase)):
+                val += inner(i+1, level-1)
+        for p in range(phase*3-1, len(signal), 4*phase):
+            for i in range(p, min(len(signal), p+phase)):
+                val -= inner(i+1, level-1)
+        res = abs(val) % 10
+        cache[key] = res
+        return res
 
-def pattern_factors(phase, pattern=PATTERN):
-    multi_pattern = cycle(flatten(zip(*(PATTERN for _ in range(phase)))))
-    next(multi_pattern)
-    yield from multi_pattern
 
-def transform_number(pos, signal):
-    factors = pattern_factors(pos)
-    # num = 0
-    # s = []
-    # for n, fac in zip(signal, factors):
-    #     num += n * fac
-    #     s.append(f'{n}*{fac}')
-    # print(' + '.join(s) + ' = ' + str(abs(num) % 10))
-    # return abs(num) % 10
-    return abs(sum(n * next(factors) for n in signal)) % 10
-
-def FFT(signal):
-    return [transform_number(i+1, signal) for i in range(len(signal))]
-
+    return [inner(p+1, N) for p in range(start, end)]        
+    
 def get_input_signal():
     with open('2019/input/day_16') as file:
         return [int(n) for n in file.readline()]
 
 def part1():
     signal = get_input_signal()
-    for _ in range(100):
-        signal = FFT(signal)
-    return ''.join(str(n) for n in signal[:8])
+    return ''.join(map(str, FFT(signal, 0, 8, 100)))
 
 def part2():
-    signal = get_input_signal() * 100
-    offset = int(''.join(str(n) for n in signal)[:7])
-    for _ in range(100):
-        print(_)
-        print(''.join(str(n) for n in signal[:]))
-        signal = FFT(signal)
-    signal = signal * 5
-    return signal[offset:offset+8]
+    signal = get_input_signal()
+    offset = int(''.join(str(n) for n in signal)[:7]) % len(signal)
+    return ''.join(map(str, FFT(signal, offset, offset+8, 100)))
+
 
 
 if __name__ == '__main__':

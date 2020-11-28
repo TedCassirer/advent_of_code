@@ -1,38 +1,21 @@
 from functools import lru_cache
 from utils import timeIt
 import heapq
+from dataclasses import dataclass
+from typing import Set, Tuple, Any
+from collections import defaultdict, deque
 
 
-def getMaze():
+def getMaze(filePath):
     maze = []
-    with open('2019/input/day_18') as file:
+    with open(filePath) as file:
         for line in file:
             maze.append(line.strip())
-        return maze
-
-
-def getKeyLocations(maze):
-    keys = {}
-    for y, row in enumerate(maze):
-        for x, c in enumerate(row):
-            if c == '@' or (c.isalpha() and c.islower()):
-                keys[c] = (y, x)
-    return keys
-
-
-maze = getMaze()
-keyLocations = getKeyLocations(maze)
-allKeys = frozenset(keyLocations.keys()) - {'@'}
+        return Maze(maze)
 
 
 def manhattanDistance(p1, p2):
     return abs(p1[0]-p2[0]) + abs(p1[1]-p2[1])
-
-
-def getNeighbours(p1):
-    for p in ((p1[0]+1, p1[1]), (p1[0]-1, p1[1]), (p1[0], p1[1]+1), (p1[0], p1[1]-1)):
-        if maze[p[0]][p[1]] != '#':
-            yield p
 
 
 @lru_cache(None)
@@ -69,7 +52,7 @@ def estimateCost(k1, remaining):
     left, right = min(map(keyLocations.get, remaining)), max(map(keyLocations.get, remaining))
     firstRoute = min(manhattanDistance(pos, left), manhattanDistance(pos, right))
     secondRoute = manhattanDistance(left, right)
-    return firstRoute + secondRoute
+    return firstRoute + secondRoute       
 
 
 def aStar(maze, start):
@@ -96,12 +79,110 @@ def aStar(maze, start):
             estimatedCost = estimateCost(k2, newKeys)
             heapq.heappush(stuff, (currentCost + estimatedCost, currentCost, k2, newKeys, toVisit))
 
+class Maze:
+    def __init__(self, maze):
+        self.__maze = maze
+        self.keyLocations = self.__getKeyLocations()
+        self.startPositions = self.__getStartPositions()
+        self.allKeys = frozenset(sorted(self.keyLocations.keys()))
+        
+    @lru_cache(None)
+    def getCost(self, p1, p2):
+        if p2 < p1:
+            return self.getCost(p2, p1)
+        k1 = self.__maze[p1[0]][p1[1]]
+        k2 = self.__maze[p2[0]][p2[1]]
+        toVisit = [(0, 0, p1, frozenset(), frozenset({p1}))]
+        woh = defaultdict(dict)
+        while toVisit:
+            _, steps, curr, r, v = heapq.heappop(toVisit)
+            for nextStep in self.getConnected(curr):
+                visited = v
+                requiredKeys = r
+                if woh[nextStep].get(requiredKeys, 1<<32) <= steps:
+                    continue
+                woh[nextStep][requiredKeys] = steps+1
+                if nextStep in visited:
+                    continue
+                visited |= {nextStep}
+
+                if nextStep == p2:
+                    return (steps+1, requiredKeys)
+
+                tile = self.getTile(nextStep)
+                if tile.isalpha():
+                    requiredKeys |= {tile.lower()}
+
+                heapq.heappush(toVisit, ((steps+1+manhattanDistance(nextStep, p2), steps+1, nextStep, requiredKeys, visited)))
+        raise Exception("This shouldn't happen")
+
+    def getTile(self, pos):
+        return self.__maze[pos[0]][pos[1]]
+
+    def getConnected(self, pos):
+        for p in ((pos[0]+1, pos[1]), (pos[0]-1, pos[1]), (pos[0], pos[1]+1), (pos[0], pos[1]-1)):
+            if self.getTile(p) != '#':
+                yield p
+
+    def __getKeyLocations(self):
+        return {c : (y, x) for y, row in enumerate(self.__maze) for x, c in enumerate(row) if c.islower()}
+
+    def __getStartPositions(self):
+        return [(y, x) for y, row in enumerate(self.__maze) for x, c in enumerate(row) if c == '@']
+
+
+@dataclass(frozen=True, eq=True, repr=True, order=True)
+class AStarNode1:
+    pos: Tuple[int]
+    remaining: Set[str]
+    
+    def goalReached(self):
+        return not self.remaining
+
+    def getNeighbours(self, maze):
+        for k2 in sorted(self.remaining):
+            p2 = maze.keyLocations[k2]
+            toVisit = self.remaining - {k2}
+            stepsToKey, requiredKeys = maze.getCost(self.pos, p2)
+            if not self.remaining.isdisjoint(requiredKeys):
+                continue
+            yield stepsToKey, AStarNode1(p2, toVisit)
+    
+    def estimateCost(self, maze):
+        if not self.remaining:
+                return 0
+        if len(self.remaining) == 1:
+            return manhattanDistance(self.pos, maze.keyLocations[next(iter(self.remaining))])
+        left, right = min(map(maze.keyLocations.get, self.remaining)), max(map(maze.keyLocations.get, self.remaining))
+        firstRoute = min(manhattanDistance(self.pos, left), manhattanDistance(self.pos, right))
+        secondRoute = manhattanDistance(left, right)
+        return firstRoute + secondRoute
+
+
+def aStarSolve(maze, start):
+    stuff = [(0, 0, start)]
+    seen = dict()
+    while stuff:
+        _, cost, n1 = heapq.heappop(stuff)
+        for costToMove, n2 in n1.getNeighbours(maze):
+            totalCost = cost + costToMove
+            if n2.goalReached():
+                return totalCost
+            if n2 in seen and seen[n2] <= totalCost:
+                continue
+            seen[n2] = totalCost
+            estimatedCost = n2.estimateCost(maze)
+            heapq.heappush(stuff, (totalCost + estimatedCost, totalCost, n2))
+
 
 @timeIt
 def part1():
-    return aStar(maze, '@')
-
-
+    maze = getMaze('2019/input/day_18')
+    assert len(maze.startPositions) == 1
+    startPos = maze.startPositions[0]
+    node = AStarNode1(pos=startPos, remaining=maze.allKeys)
+    return aStarSolve(maze, node)
+    
 def part2():
     pass
 
